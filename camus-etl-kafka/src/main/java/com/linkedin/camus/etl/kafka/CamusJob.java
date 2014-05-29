@@ -44,15 +44,8 @@ import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.JobID;
 import org.apache.hadoop.mapred.TIPStatus;
-import org.apache.hadoop.mapred.TaskCompletionEvent;
-import org.apache.hadoop.mapred.TaskReport;
-import org.apache.hadoop.mapreduce.Counter;
-import org.apache.hadoop.mapreduce.CounterGroup;
-import org.apache.hadoop.mapreduce.Counters;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
@@ -314,8 +307,9 @@ public class CamusJob extends Configured implements Tool {
 
 			TaskCompletionEvent[] tasks = job.getTaskCompletionEvents(0);
 
-			for (TaskReport task : client.getMapTaskReports(tasks[0]
-					.getTaskAttemptId().getJobID())) {
+			for (TaskReport task : client.getMapTaskReports(
+                    org.apache.hadoop.mapred.JobID.downgrade(tasks[0]
+					    .getTaskAttemptId().getJobID()))) {
 				if (task.getCurrentStatus().equals(TIPStatus.FAILED)) {
 					for (String s : task.getDiagnostics()) {
 						System.err.println("task error: " + s);
@@ -477,8 +471,9 @@ public class CamusJob extends Configured implements Tool {
 
 		JobClient client = new JobClient(new JobConf(job.getConfiguration()));
 
-		TaskReport[] tasks = client.getMapTaskReports(JobID.downgrade(job
-				.getJobID()));
+		TaskReport[] tasks = client.getMapTaskReports(
+                org.apache.hadoop.mapred.JobID.downgrade(job
+				    .getJobID()));
 
 		double min = Long.MAX_VALUE, max = 0, mean = 0;
 		double minRun = Long.MAX_VALUE, maxRun = 0, meanRun = 0;
